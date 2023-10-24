@@ -374,6 +374,30 @@ fn test_tree_cursor() {
 
     assert!(copy.goto_parent());
     assert_eq!(copy.node().kind(), "struct_item");
+
+    let text = "
+    // Hi there
+
+    // This is fun!
+
+    // Another one!
+";
+    let tree = parser
+    .parse(text,
+        None,
+    )
+    .unwrap();
+
+    let mut cursor = tree.walk();
+    assert_eq!(cursor.node().kind(), "source_file");
+
+    assert!(cursor.goto_last_child());
+    assert_eq!(cursor.node().kind(), "line_comment");
+    assert_eq!(cursor.node().utf8_text(text.as_bytes()).unwrap(), "// Another one!");
+
+    assert!(cursor.goto_previous_sibling());
+    assert_eq!(cursor.node().kind(), "line_comment");
+    assert_eq!(cursor.node().utf8_text(text.as_bytes()).unwrap(), "// This is fun!");
 }
 
 #[test]
