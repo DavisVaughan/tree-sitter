@@ -374,6 +374,31 @@ fn test_tree_cursor() {
 
     assert!(copy.goto_parent());
     assert_eq!(copy.node().kind(), "struct_item");
+
+    let text = "// hi there";
+
+    // One pass parsing works fine
+    let tree = parser.parse(text, None).unwrap();
+
+    let mut cursor = tree.walk();
+    assert_eq!(cursor.node().kind(), "source_file");
+
+    assert!(cursor.goto_first_child());
+    assert_eq!(cursor.node().kind(), "line_comment");
+    assert_eq!(cursor.node().utf8_text(text.as_bytes()).unwrap(), text);
+
+    // Incremental parsing fails
+    let tree = parser.parse("", None).unwrap();
+    let tree = parser.parse("//", Some(&tree)).unwrap();
+    let tree = parser.parse(text, Some(&tree)).unwrap();
+
+    let mut cursor = tree.walk();
+    assert_eq!(cursor.node().kind(), "source_file");
+
+    // In particular, assertion fails here!
+    assert!(cursor.goto_first_child());
+    assert_eq!(cursor.node().kind(), "line_comment");
+    assert_eq!(cursor.node().utf8_text(text.as_bytes()).unwrap(), text);
 }
 
 #[test]
