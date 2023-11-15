@@ -416,6 +416,37 @@ fn test_tree_cursor_previous_sibling() {
 }
 
 #[test]
+fn test_tree_cursor_r() {
+    let mut parser = Parser::new();
+    parser.set_language(get_language("r")).unwrap();
+
+    // This is an `identifier`
+    let text = "foo";
+
+    let tree = parser.parse(text, None).unwrap();
+
+    let mut cursor = tree.walk();
+    assert_eq!(cursor.node().kind(), "program");
+
+    // program -> identifier
+    assert!(cursor.goto_first_child());
+    assert_eq!(cursor.node().kind(), "identifier");
+    assert_eq!(cursor.node().utf8_text(text.as_bytes()).unwrap(), "foo");
+
+    // Doesn't move at all
+    // (but I think the problem is here? i.e. the `ptr` is set to an invalid memory
+    // location here when looking for a child)
+    assert!(!cursor.goto_first_child());
+    assert_eq!(cursor.node().kind(), "identifier");
+    assert_eq!(cursor.node().utf8_text(text.as_bytes()).unwrap(), "foo");
+
+    // Shouldn't move at all. But we get a panic
+    assert!(!cursor.goto_last_child());
+    assert_eq!(cursor.node().kind(), "identifier");
+    assert_eq!(cursor.node().utf8_text(text.as_bytes()).unwrap(), "foo");
+}
+
+#[test]
 fn test_tree_cursor_fields() {
     let mut parser = Parser::new();
     parser.set_language(get_language("javascript")).unwrap();

@@ -21,6 +21,25 @@ fetch_grammar() {
   )
 }
 
+fetch_r_grammar() {
+  local grammar=$1
+  local ref=$2
+  local grammar_dir=${GRAMMARS_DIR}/${grammar}
+  local grammar_url=https://github.com/r-lib/tree-sitter-r
+
+  echo "Updating ${grammar} grammar..."
+
+  if [ ! -d $grammar_dir ]; then
+    git clone $grammar_url $grammar_dir --depth=1
+  fi
+
+  (
+    cd $grammar_dir
+    git fetch origin $ref --depth=1
+    git reset --hard FETCH_HEAD
+  )
+}
+
 fetch_grammar bash              master
 fetch_grammar c                 master
 fetch_grammar cpp               master
@@ -36,3 +55,4 @@ fetch_grammar python            master
 fetch_grammar ruby              master
 fetch_grammar rust              master
 fetch_grammar typescript        master
+fetch_r_grammar r               next
