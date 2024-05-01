@@ -1,4 +1,4 @@
-use tree_sitter::{Node, Parser, Point, Tree};
+use tree_sitter::{Node, Parser, Point, Range, Tree};
 
 use super::helpers::{
     edits::get_random_edit,
@@ -339,6 +339,45 @@ fn test_node_child_by_field_name_with_extra_hidden_children() {
         while_node.child_by_field_name("body").unwrap(),
         while_node.child(3).unwrap(),
     );
+}
+
+#[test]
+fn test_node_is_missing() {
+    let mut parser = Parser::new();
+    parser.set_language(&get_language("julia")).unwrap();
+    let source = "x =";
+
+    let tree = parser.parse(source, None).unwrap();
+
+    let node = tree.root_node().child(0).unwrap();
+    assert_eq!(node.kind(), "assignment");
+
+    // The `x`
+    let child = node.child(0).unwrap();
+    assert_eq!(child.kind(), "identifier");
+
+    // The `=`
+    let child = node.child(1).unwrap();
+    assert_eq!(child.kind(), "operator");
+
+    // This is a MISSING node!
+    let child = node.child(2).unwrap();
+    assert_eq!(child.kind(), "identifier");
+
+    // See, it is 0 width and everything (this passes)
+    assert_eq!(
+        child.range(), 
+        Range {
+            start_byte: 3, 
+            end_byte: 3, 
+            start_point: Point { row: 0, column: 3 }, 
+            end_point: Point { row: 0, column: 3 }
+        }
+    );
+
+    // But it isn't declared as missing here.
+    // This should pass, but does not!
+    assert!(child.is_missing());
 }
 
 #[test]
