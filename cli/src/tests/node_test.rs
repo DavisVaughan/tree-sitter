@@ -603,6 +603,18 @@ fn test_node_descendant_for_range() {
     assert_eq!(pair_node.end_byte(), string_index + 9);
     assert_eq!(pair_node.start_position(), Point::new(6, 4));
     assert_eq!(pair_node.end_position(), Point::new(6, 13));
+
+    // Range is misspecified, return self - byte query
+    let self_node = array_node
+        .named_descendant_for_byte_range(5, 3)
+        .unwrap();
+    assert_eq!(self_node, array_node);
+
+    // Range is misspecified, return self - point query
+    let self_node = array_node
+        .named_descendant_for_point_range(Point::new(6, 6), Point::new(6, 4))
+        .unwrap();
+    assert_eq!(self_node, array_node);
 }
 
 #[test]
